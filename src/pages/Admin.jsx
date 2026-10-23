@@ -44,7 +44,10 @@ const LocationPicker = React.memo(function LocationPicker({ lat, lng, onLocation
         style={{ height: '100%', width: '100%' }}
         zoomControl={false}
       >
-        <TileLayer url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png" />
+        <TileLayer 
+          attribution='&copy; Esri, OpenStreetMap contributors'
+          url="https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}" 
+        />
         
         {/* Render structural grid lines */}
         {backgroundGrid.map(rect => (

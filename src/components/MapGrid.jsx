@@ -2,10 +2,10 @@ import React from 'react';
 import { Rectangle } from 'react-leaflet';
 import { generateVisibleGridRectangles } from '../utils/gridUtils';
 
-const MapGrid = ({ activeCenter }) => {
+const MapGrid = ({ activeCenter, gridKm = 1 }) => {
   if (!activeCenter) return null;
 
-  const rectangles = generateVisibleGridRectangles(activeCenter[0], activeCenter[1]);
+  const rectangles = generateVisibleGridRectangles(activeCenter[0], activeCenter[1], gridKm);
 
   return (
     <>

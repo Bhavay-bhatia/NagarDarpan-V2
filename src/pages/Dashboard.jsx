@@ -12,10 +12,16 @@ function Dashboard() {
 
   const { 
     userLocation, 
+    activeExploreCenter,
     isDefaultLocation, 
+    areaName,
+    gridKm,
+    setGridKm,
     projectsData, 
     isLocating, 
-    fetchLocation 
+    fetchLocation,
+    exploreLocation,
+    resetToUserLocation
   } = useContext(ProjectContext);
 
   const [showLoading, setShowLoading] = useState(isLocating);
@@ -34,22 +40,22 @@ function Dashboard() {
     }
   }, [isLocating, showLoading]);
 
-  // Prevent map from shifting automatically when user clicks a project
-  const activeCenter = userLocation; 
+  // Center on explored location if set, otherwise user's location
+  const activeCenter = activeExploreCenter || userLocation; 
 
   const filteredProjects = useMemo(() => {
     if (!activeCenter) return [];
 
-    // Smart logic: Only show projects in the active 3x3 grid relative to activeCenter
+    // Filter projects within the active ward grid sector of the selected gridKm size
     let filtered = projectsData.filter(p => 
-      isProjectInActiveGrid(p.lat, p.lng, activeCenter[0], activeCenter[1])
+      isProjectInActiveGrid(p.lat, p.lng, activeCenter[0], activeCenter[1], gridKm)
     );
 
     if (filter !== 'All') {
       filtered = filtered.filter(p => p.category === filter);
     }
     return filtered;
-  }, [filter, projectsData, activeCenter]);
+  }, [filter, projectsData, activeCenter, gridKm]);
 
   const handleFilterClick = useCallback((f) => {
     setFilter(f);
@@ -99,13 +105,25 @@ function Dashboard() {
             <span className="region-label" style={{ backgroundColor: '#EDF2F7', color: '#2D3748', border: '1px solid #CBD5E0' }}>
               Viewing: <strong>{activeProject.name}</strong>
             </span>
+          ) : activeExploreCenter ? (
+            <span className="region-label" style={{ backgroundColor: '#FEEBC8', color: '#7B341E', border: '1px solid #FBD38D', display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <span>Explored Ward: <strong>{areaName}</strong> ({gridKm}km Grid)</span>
+              <button 
+                type="button"
+                onClick={resetToUserLocation} 
+                style={{ background: '#DD6B20', color: '#FFF', border: 'none', borderRadius: '12px', padding: '2px 8px', fontSize: '0.72rem', cursor: 'pointer', fontWeight: 600 }}
+                title="Return to your local ward"
+              >
+                Reset to My Location
+              </button>
+            </span>
           ) : isDefaultLocation ? (
             <span className="region-label" style={{ backgroundColor: '#fed7d7', color: '#9b2c2c', borderColor: '#feb2b2' }}>
-              Using default location (Delhi)
+              Using default location ({areaName || 'Delhi'})
             </span>
           ) : (
             <span className="region-label" style={{ backgroundColor: '#c6f6d5', color: '#22543d', borderColor: '#9ae6b4' }}>
-              Showing nearby projects
+              Showing nearby projects ({areaName}) • {gridKm}km Ward
             </span>
           )}
         </div>
@@ -126,7 +144,7 @@ function Dashboard() {
           <div className="header-actions">
             <button 
               className="action-btn location-btn" 
-              onClick={() => { resetTargetRegion(); fetchLocation(); }}
+              onClick={() => { resetTargetRegion(); resetToUserLocation(); fetchLocation(); }}
               title="Go to My Location"
             >
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
@@ -158,10 +176,15 @@ function Dashboard() {
           toggleMobileOpen={() => setIsMobileListOpen(!isMobileListOpen)}
         />
         <CivicMap 
-          projects={filteredProjects}
+          projects={filteredProjects} 
           userLocation={userLocation}
           activeCenter={activeCenter}
+          activeExploreCenter={activeExploreCenter}
           activeProject={activeProject}
+          gridKm={gridKm}
+          onGridChange={setGridKm}
+          onExploreLocation={exploreLocation}
+          onResetLocation={resetToUserLocation}
           onProjectClick={handleProjectClick}
         />
       </div>
